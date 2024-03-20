@@ -1,0 +1,241 @@
+---
+title: "Jeena 16S"
+output:
+  html_document:
+    df_print: tibble
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: haddock
+    code_folding: hide
+    error: false
+editor_options: 
+  markdown: 
+    wrap: sentence
+    keep_md: true
+    warning: False
+date: "2024-03-20"
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T, eval=FALSE)
+```
+
+```{r}
+library(tidyverse)
+```
+# Input data
+```{r}
+# input OTU data
+file_path <- "feature-table.biom.txt"
+
+data <- read.table(file_path, sep = "\t", header = TRUE)
+
+column_names <- colnames(data)
+
+print(column_names)
+
+
+# input mapping file
+mapping_file <- 'JEENA.mapping.txt'
+
+mapping_data <- read.table(mapping_file, sep = '\t', header = TRUE)
+
+head(mapping_data)
+
+# input taxonomy file
+taxonomy_file <-'taxonomy.tsv'
+
+# Reading TSV file
+taxonomy_data <- read.table(taxonomy_file, sep = '\t', header = TRUE)
+
+# Viewing the first few lines of the taxonomy data
+head(taxonomy_data)
+taxonomy_data_separated <- taxonomy_data %>%
+  separate(col = Taxon, 
+           into = c("Domain", "Phylum", "Class", "Order", "Family", "Genus", "Species"),
+           sep = "; ",
+           remove=F)
+
+# Viewing the first few lines of the modified data
+head(taxonomy_data_separated)
+```
+## Merge Taxon to OTU
+```{r}
+#merge taxonomy to OTU
+data <- data %>% rename(Feature.ID = OTUID)
+
+combined_OTU <- left_join(data, taxonomy_data_separated, by = "Feature.ID")
+
+# Viewing the first few lines of the combined data
+head(combined_OTU)
+```
+## Fliter out non-bacteira data
+```{r}
+#filter data
+#remove non-bacteria data
+bacteria_OTU <- combined_OTU %>% filter(Domain == "d__Bacteria")
+
+# Viewing the first few lines of the filtered data
+head(bacteria_OTU)
+bacteria_OTU  <- bacteria_OTU  %>%
+  rename(`#NAME` = Taxon)
+```
+
+# Get subset of data
+```{r}
+## Data1 D0 and D7, GOS and Control diet
+selected_samples <- mapping_data %>%
+  filter(Timepoint %in% c(0, 7)) %>%
+  pull(id)
+
+# Subset the filtered_OTU data to keep only the selected columns
+data1 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data1, "data1.csv", row.names = FALSE)
+
+## Data2 D0, GOS and Control diet
+selected_samples <- mapping_data %>%
+  filter(Timepoint %in% c(0)) %>%
+  pull(id)
+
+data2 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data2, "data2.csv", row.names = FALSE)
+
+## Data3 D7, GOS and Control diet
+selected_samples <- mapping_data %>%
+  filter(Timepoint %in% c(7)) %>%
+  pull(id)
+
+data3 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data3, "data3.csv", row.names = FALSE)
+
+## Data4 D14, all diets and treatments
+selected_samples <- mapping_data %>%
+  filter(Timepoint %in% c(14)) %>%
+  pull(id)
+
+data4 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data4, "data4.csv", row.names = FALSE)
+
+## Data5 D14,all diets, and Consortium
+selected_samples <- mapping_data %>%
+  filter(Treatment %in% c("Consortium"),Timepoint %in% c(14)) %>%
+  pull(id)
+
+data5 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data5, "data5.csv", row.names = FALSE)
+
+## Data6 D14,all diets, and all FMT
+selected_samples <- mapping_data %>%
+  filter(Treatment %in% c("FMT-GOS","FMT-control"),Timepoint %in% c(14)) %>%
+  pull(id)
+
+data6 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data6, "data6.csv", row.names = FALSE)
+
+## Data7 D14,control diet and FMT-Control
+selected_samples <- mapping_data %>%
+  filter(Treament.Descr %in% c("Control+FMT-control"),Timepoint %in% c(14)) %>%
+  pull(id)
+
+data7 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data7, "data7.csv", row.names = FALSE)
+
+## Data8 D14, GOS diet and FMT-GOS
+selected_samples <- mapping_data %>%
+  filter(Treament.Descr %in% c("GOS+FMT-GOS"),Timepoint %in% c(14)) %>%
+  pull(id)
+
+data8 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data8, "data8.csv", row.names = FALSE)
+
+## Data9 D21 D22, all diets and all treatment
+selected_samples <- mapping_data %>%
+  filter(Timepoint %in% c(21,22)) %>%
+  pull(id)
+
+data9 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data9, "data9.csv", row.names = FALSE)
+
+## Data10, D21 all diets and all treatment
+selected_samples <- mapping_data %>%
+  filter(Timepoint %in% c(21)) %>%
+  pull(id)
+
+data10 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data10, "data10.csv", row.names = FALSE)
+
+## Data11, D22 all diets and all treatment
+selected_samples <- mapping_data %>%
+  filter(Timepoint %in% c(22)) %>%
+  pull(id)
+
+data11 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data11, "data11.csv", row.names = FALSE)
+
+
+## Data12, D23,D26,D28,D31, all diets and all treatment
+selected_samples <- mapping_data %>%
+  filter(Timepoint %in% c(23,26,28, 31)) %>%
+  pull(id)
+
+data12 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data12, "data12.csv", row.names = FALSE)
+
+## Data13, D23,D26,D28,D31, control diets and all treatment
+selected_samples <- mapping_data %>%
+  filter(Timepoint %in% c(23,26,28, 31),Diet %in% c("Control")) %>%
+  pull(id)
+
+data13 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data13, "data13.csv", row.names = FALSE)
+
+## Data14, D23,D26,D28,D31, GOS diets and all treatment
+selected_samples <- mapping_data %>%
+  filter(Timepoint %in% c(23,26,28, 31),Diet %in% c("GOS")) %>%
+  pull(id)
+
+data14<- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data14, "data14.csv", row.names = FALSE)
+
+## Data15, D31, all diets and all treatment
+selected_samples <- mapping_data %>%
+  filter(Timepoint %in% c(31)) %>%
+  pull(id)
+
+data15 <- bacteria_OTU %>%
+  select(`#NAME`, all_of(selected_samples))
+
+write.csv(data15, "data15.csv", row.names = FALSE)
+```
+
+
